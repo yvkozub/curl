@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: curl
 #
+AAAA
 ABI
 accessor
 ACK
@@ -10,6 +11,7 @@ AIA
 AIX
 al
 Alessandro
+aliasMode
 allocator
 alnum
 ALPN
@@ -107,6 +109,7 @@ CLA
 CLAs
 cleartext
 CLI
+ClientHello
 clientp
 cliget
 closesocket
@@ -114,6 +117,8 @@ CMake
 CMake's
 cmake
 cmake's
+CNAME
+CNAMEs
 CMakeLists
 CodeQL
 codeql
@@ -143,6 +148,7 @@ cURL
 CURLcode
 curldown
 CURLE
+CURLECH
 CURLH
 curlimages
 CURLINFO
@@ -161,6 +167,7 @@ dbg
 Debian
 DEBUGBUILD
 decrypt
+decrypting
 deepcode
 DELE
 DER
@@ -187,6 +194,7 @@ DNS
 dns
 dnsop
 DoH
+DoT
 doxygen
 drftpd
 dsa
@@ -198,6 +206,9 @@ EBCDIC
 ECC
 ECDHE
 ECH
+ecl
+ECHConfig
+ECHConfigList
 ECONNREFUSED
 eCOS
 EFnet
@@ -281,6 +292,8 @@ GOST
 GPG
 GPL
 GPLed
+GREASE
+GREASEing
 Greear
 groff
 GSKit
@@ -303,6 +316,7 @@ Hards
 Haxx
 haxx
 Heimdal
+HelloRetryRequest
 HELO
 HH
 HMAC
@@ -312,6 +326,7 @@ homebrew
 hostname
 hostnames
 Housley
+HRR
 Hruska
 HSTS
 hsts
@@ -584,6 +599,7 @@ pkcs
 PKGBUILD
 PKI
 pluggable
+pn
 PolarSSL
 Polhem
 pollset
@@ -619,6 +635,7 @@ py
 pycurl
 pytest
 Pytest
+qname
 QNX
 QoS
 Qubes
@@ -662,6 +679,9 @@ Roadmap
 Rockbox
 roffit
 RPG
+RR
+RRs
+RRtype
 RSA
 RTMP
 rtmp
@@ -778,6 +798,7 @@ SunSSH
 superset
 svc
 svcb
+SVCB
 Svyatoslav
 Swisscom
 sws

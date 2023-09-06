@@ -339,7 +339,10 @@ typedef enum {
   C_VERSION,
   C_WDEBUG,
   C_WRITE_OUT,
-  C_XATTR
+  C_XATTR,
+#ifdef USE_ECH
+  C_ECH
+#endif
 } cmdline_t;
 
 struct LongShort {
@@ -623,6 +626,9 @@ static const struct LongShort aliases[]= {
 #endif
   {"write-out",                  ARG_STRG, 'w', C_WRITE_OUT},
   {"xattr",                      ARG_BOOL, ' ', C_XATTR},
+#ifdef USE_ECH
+  {"ech",                        ARG_STRG, ' ', C_ECH},
+#endif
 };
 
 /* Split the argument of -E to 'certname' and 'passphrase' separated by colon.
@@ -2075,8 +2081,54 @@ ParameterError getparameter(const char *flag, /* f or -long-flag */
       if(!err &&
          config->engine && !strcmp(config->engine, "list")) {
         err = PARAM_ENGINES_REQUESTED;
+        break;
+#ifdef USE_ECH
+   case C_ECH:
+      if(strlen(nextarg) > 4 && strncasecompare("pn:", nextarg, 3)) {
+        /* a public_name */
+        GetStr(&config->ech_public, nextarg);
       }
-      break;
+      else if(strlen(nextarg) > 5 && strncasecompare("ecl:", nextarg, 4)) {
+        /* an ECHConfigList */
+        if('@' != *(nextarg + 4)) {
+          GetStr(&config->ech_config, nextarg);
+        }
+        else {
+          /* Indirect case: @filename or @- for stdin */
+          char *tmpcfg = NULL;
+          FILE *file;
+
+          nextarg++;        /* skip over '@' */
+          if(!strcmp("-", nextarg)) {
+            file = stdin;
+          }
+          else {
+            file = fopen(nextarg, FOPEN_READTEXT);
+          }
+          if(!file) {
+            warnf(global,
+                  "Couldn't read file \"%s\" "
+                  "specified for \"--ech ecl:\" option",
+                  nextarg);
+            return PARAM_BAD_USE; /*  */
+          }
+          err = file2string(&tmpcfg, file);
+          if(file != stdin)
+            fclose(file);
+          if(err)
+            return err;
+          config->ech_config = aprintf("ecl:%s",tmpcfg);
+          if(!config->ech_config)
+            return PARAM_NO_MEM;
+          free(tmpcfg);
+      } /* file done */
+    }
+    else {
+      /* Simple case: just a string, with a keyword */
+      GetStr(&config->ech, nextarg);
+    }
+    break;
+#endif
     case C_CAPATH: /* --capath */
       err = getstr(&config->capath, nextarg, DENY_BLANK);
       break;
