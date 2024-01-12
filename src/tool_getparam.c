@@ -123,6 +123,9 @@ typedef enum {
   C_DOH_INSECURE,
   C_DOH_URL,
   C_DUMP_HEADER,
+#ifdef USE_ECH
+  C_ECH,
+#endif
   C_EGD_FILE,
   C_ENGINE,
   C_EPRT,
@@ -339,10 +342,7 @@ typedef enum {
   C_VERSION,
   C_WDEBUG,
   C_WRITE_OUT,
-  C_XATTR,
-#ifdef USE_ECH
-  C_ECH
-#endif
+  C_XATTR
 } cmdline_t;
 
 struct LongShort {
@@ -407,6 +407,9 @@ static const struct LongShort aliases[]= {
   {"doh-insecure",               ARG_BOOL, ' ', C_DOH_INSECURE},
   {"doh-url"        ,            ARG_STRG, ' ', C_DOH_URL},
   {"dump-header",                ARG_FILE, 'D', C_DUMP_HEADER},
+#ifdef USE_ECH
+  {"ech",                        ARG_STRG, ' ', C_ECH},
+#endif
   {"egd-file",                   ARG_STRG, ' ', C_EGD_FILE},
   {"engine",                     ARG_STRG, ' ', C_ENGINE},
   {"eprt",                       ARG_BOOL, ' ', C_EPRT},
@@ -626,9 +629,6 @@ static const struct LongShort aliases[]= {
 #endif
   {"write-out",                  ARG_STRG, 'w', C_WRITE_OUT},
   {"xattr",                      ARG_BOOL, ' ', C_XATTR},
-#ifdef USE_ECH
-  {"ech",                        ARG_STRG, ' ', C_ECH},
-#endif
 };
 
 /* Split the argument of -E to 'certname' and 'passphrase' separated by colon.
@@ -2081,17 +2081,18 @@ ParameterError getparameter(const char *flag, /* f or -long-flag */
       if(!err &&
          config->engine && !strcmp(config->engine, "list")) {
         err = PARAM_ENGINES_REQUESTED;
-        break;
+      }
+      break;
 #ifdef USE_ECH
-   case C_ECH:
+    case C_ECH: /* --ech */
       if(strlen(nextarg) > 4 && strncasecompare("pn:", nextarg, 3)) {
         /* a public_name */
-        GetStr(&config->ech_public, nextarg);
+        err = getstr(&config->ech_public, nextarg, DENY_BLANK);
       }
       else if(strlen(nextarg) > 5 && strncasecompare("ecl:", nextarg, 4)) {
         /* an ECHConfigList */
         if('@' != *(nextarg + 4)) {
-          GetStr(&config->ech_config, nextarg);
+          err = getstr(&config->ech_config, nextarg, DENY_BLANK);
         }
         else {
           /* Indirect case: @filename or @- for stdin */
@@ -2125,7 +2126,7 @@ ParameterError getparameter(const char *flag, /* f or -long-flag */
     }
     else {
       /* Simple case: just a string, with a keyword */
-      GetStr(&config->ech, nextarg);
+      err = getstr(&config->ech, nextarg, DENY_BLANK);
     }
     break;
 #endif
