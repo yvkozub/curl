@@ -3873,7 +3873,7 @@ static CURLcode ossl_connect_step1(struct Curl_cfilter *cf,
     else {
       struct Curl_dns_entry *dns = NULL;
 
-      dns = Curl_fetch_addr(data, connssl->hostname, connssl->port);
+      dns = Curl_fetch_addr(data, connssl->peer.hostname, connssl->port);
       if(!dns) {
         infof(data, "ECH: requested but no DNS info available");
         if(data->set.tls_ech & (1 << CURLECH_HARD))
@@ -3922,10 +3922,10 @@ static CURLcode ossl_connect_step1(struct Curl_cfilter *cf,
 # else
     if(trying_ech_now && outername) {
       infof(data, "ECH: inner: '%s', outer: '%s'",
-            hostname, outername);
+            connssl->peer.hostname, outername);
       result = SSL_ech_set_server_names(backend->handle,
-                                    hostname, outername,
-                                    0 /* do send outer */);
+                                        connssl->peer.hostname, outername,
+                                        0 /* do send outer */);
       if(result != 1) {
         infof(data, "ECH: rv failed to set server name(s) %d [ERROR]", result);
         return CURLE_SSL_CONNECT_ERROR;

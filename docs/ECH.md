@@ -48,6 +48,9 @@ isn't enabled, so go back some steps and re-do whatever needs re-doing:-) If you
 want to debug curl then you should add ``--enable-debug`` to the ``configure``
 command.
 
+You may need to install some libraries to get ``configrure`` to
+work, e.g. I recently had to add  ``sudo apt install libpsl-dev``
+
 ## Building with cmake
 
 This is not working cleanly yet, but to build with cmake:
@@ -309,6 +312,9 @@ tool.
 attempts ECH with various test servers. While that is a useful test and does
 find issues (e.g. with the wolfSSL build), it's nowhere near comprehensive and
 we're not (as yet) sure what would be the right level of coverage.
+Note that when running that you should not have a ``$HOME/.curlrc`` file
+that affects ECH or some of the negative tests could produce spurious
+failures.
 
 ## WolfSSL build
 
