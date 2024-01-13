@@ -483,7 +483,9 @@ As of now we have not:
 
 - added support for using ``retry_config`` handling in the application - for a
   command line tool, one can just use ``dig`` (or ``kdig``) to get the HTTPS
-  RR and pass the ECHConfigList from that on the command line, if needed
+  RR and pass the ECHConfigList from that on the command line, if needed, or
+  one can access the value from command line output in verbose more and then
+  re-use that in another invocation.
 
 Both our OpenSSL fork and boringssl have APIs for both controlling GREASE and
 accessing and logging ``retry_configs``, it seems WolfSSL has neither.
