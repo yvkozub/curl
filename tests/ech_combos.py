@@ -1,15 +1,35 @@
-#!/usr/bin/python
-# Python3 program to print all combination
-# of size r in an array of size n
-# used to generate test lines in tests/ech_test.sh
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+#***************************************************************************
+#                                  _   _ ____  _
+#  Project                     ___| | | |  _ \| |
+#                             / __| | | | |_) | |
+#                            | (__| |_| |  _ <| |___
+#                             \___|\___/|_| \_\_____|
+#
+# Copyright (C) Daniel Stenberg, <daniel@haxx.se>, et al.
+#
+# This software is licensed as described in the file COPYING, which
+# you should have received as part of this distribution. The terms
+# are also available at https://curl.se/docs/copyright.html.
+#
+# You may opt to use, copy, modify, merge, publish, distribute and/or sell
+# copies of the Software, and permit persons to whom the Software is
+# furnished to do so, under the terms of the COPYING file.
+#
+# This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
+# KIND, either express or implied.
+#
+# SPDX-License-Identifier: curl
+#
+###########################################################################
+#
+# Python3 program to print all combination of size r in an array of size n.
+# This is used to generate test lines in tests/ech_test.sh.
+# This will be discarded in the process of moving from experimental,
+# but is worth preserving for the moment in case of changes to the 
+# ECH command line args
 
-''' arr[] ---> Input Array 
-    chosen[] ---> Temporary array to store 
-            current combination
-    start & end ---> Starting and Ending indexes in arr[] 
-    r---> Size of a combination to be printed 
-
-    '''
 def CombinationRepetitionUtil(chosen, arr, badarr, index,
                             r, start, end):
                                 
