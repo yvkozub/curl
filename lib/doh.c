@@ -1076,14 +1076,14 @@ static CURLcode local_decode_rdata_name(unsigned char **buf, size_t *remaining,
     *tp++ = '.';
     cp += clen;
     rem -= (clen + 1);
-    if(rem<=0) {
+    if(rem <= 0) {
       free(thename);
       return CURLE_OUT_OF_MEMORY;
     }
     clen = *cp++;
   }
   *buf = cp;
-  if(rem<=0) {
+  if(rem <= 0) {
     free(thename);
     return CURLE_OUT_OF_MEMORY;
   }
