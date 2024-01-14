@@ -365,48 +365,41 @@ do
     echo "" >>$logfile
 done
 
-# check if public_name override works
-for targ in "${!ech_targets[@]}"
-do
-    if [[ "$using_wolf" == "yes" && "$targ" == "draft-13.esni.defo.ie:8414" ]]
-    then
-        echo "Skipping $targ 'till wolf does HRR+ECH"
-        continue
-    fi
-    if [[ "$using_wolf" == "yes" && "$targ" == "tls-ech.dev" ]]
-    then
-        echo "Skipping $targ 'till wolf does HRR+ECH"
-        continue
-    fi
-    host=$(hostport2host $targ)
-    port=$(hostport2port $targ)
-    if [[ "$port" != "443" && "$have_portsblocked" == "yes" ]]
-    then
-        echo "Skipping $targ as ports != 443 seem blocked"
-        continue
-    fi
-    path=${ech_targets[$targ]}
-    turl="https://$host:$port/$path"
-    echo "PN override check for $turl"
-    echo "" >>$logfile
-    echo "PN override check for $turl" >>$logfile
-    timeout $tout $CURL --ech pn:override --ech hard $turl >>$logfile 2>&1
-    eres=$?
-    if [[ "$eres" == "124" ]]
-    then
-        allgood="no"
-        echo "Timeout for $turl" >>$logfile
-        echo -e "\tTimeout for $turl" >>$logfile
-        echo "Timeout running curl for $host:$port/$path" >>$logfile
-    fi
-    if [[ "$eres" != "0" ]]
-    then
-        allgood="no"
-        echo "PN override Error ($eres) for $turl" >>$logfile
-        echo -e "\tPN override Error ($eres) for $turl"
-    fi
-    echo "" >>$logfile
-done
+# check if public_name override works (OpenSSL only)
+if [[ "$using_ossl" == "yes" ]]
+then
+    for targ in "${!ech_targets[@]}"
+    do
+        host=$(hostport2host $targ)
+        port=$(hostport2port $targ)
+        if [[ "$port" != "443" && "$have_portsblocked" == "yes" ]]
+        then
+            echo "Skipping $targ as ports != 443 seem blocked"
+            continue
+        fi
+        path=${ech_targets[$targ]}
+        turl="https://$host:$port/$path"
+        echo "PN override check for $turl"
+        echo "" >>$logfile
+        echo "PN override check for $turl" >>$logfile
+        timeout $tout $CURL --ech pn:override --ech hard $turl >>$logfile 2>&1
+        eres=$?
+        if [[ "$eres" == "124" ]]
+        then
+            allgood="no"
+            echo "Timeout for $turl" >>$logfile
+            echo -e "\tTimeout for $turl" >>$logfile
+            echo "Timeout running curl for $host:$port/$path" >>$logfile
+        fi
+        if [[ "$eres" != "0" ]]
+        then
+            allgood="no"
+            echo "PN override Error ($eres) for $turl" >>$logfile
+            echo -e "\tPN override Error ($eres) for $turl"
+        fi
+        echo "" >>$logfile
+    done
+fi
 
 for targ in "${!httpsrr_targets[@]}"
 do
@@ -473,7 +466,7 @@ do
 done
 
 # Check various command line options, if we're good so far
-if [[ "$allgood" == "yes" ]]
+if [[ "$using_ossl" == "yes" && "$allgood" == "yes" ]]
 then
     # use this test URL as it'll tell us if things worked
     turl="https://defo.ie/ech-check.php"
@@ -482,19 +475,17 @@ then
     cli_test $turl 1 1 --ech true
     cli_test $turl 1 0 --ech false
     cli_test $turl 1 1 --ech false --ech true
-    if [[ "$using_ossl" == "yes" ]]
-    then
-      # only OpenSSL builds support pn:
-      cli_test $turl 1 1 --ech false --ech true --ech pn:foobar
-      cli_test $turl 1 1 --ech false --ech pn:foobar --ech true
-    fi
+    cli_test $turl 1 1 --ech false --ech true --ech pn:foobar
+    cli_test $turl 1 1 --ech false --ech pn:foobar --ech true
     echconfiglist=$(get_ech_configlist defo.ie)
     cli_test $turl 1 1 --ech ecl:$echconfiglist
     cli_test $turl 1 0 --ech ecl:
 fi
 
 # Check combinations of command line options, if we're good so far
-if [[ "$allgood" == "yes" ]]
+# Most of this only works for openssl, which is ok, as we're checking
+# the argument handling here, not the ECH protocol
+if [[ "$using_ossl" == "yes" && "$allgood" == "yes" ]]
 then
     # ech can be hard, true, grease or false
     # ecl:ecl can be correct, incorrect or missing
