@@ -752,13 +752,13 @@ wolfssl_connect_step1(struct Curl_cfilter *cf, struct Curl_easy *data)
       }
       else {
        trying_ech_now = 1;
-       infof(data, "ECH: ECHConfig set from command line: %s", b64val);
+       infof(data, "ECH: ECHConfig from command line");
       }
     }
     else {
       struct Curl_dns_entry *dns = NULL;
 
-      dns = Curl_fetch_addr(data, connssl->hostname, connssl->port);
+      dns = Curl_fetch_addr(data, connssl->peer.hostname, connssl->port);
       if(!dns) {
         infof(data, "ECH: requested but no DNS info available");
         if(data->set.tls_ech == CURLECH_HARD)
