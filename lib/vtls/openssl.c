@@ -3858,7 +3858,6 @@ static CURLcode ossl_connect_step1(struct Curl_cfilter *cf,
         infof(data, "ECH: ECHConfig from command line empty");
         return CURLE_SSL_CONNECT_ERROR;
       }
-      infof(data, "ECH: ECHConfig from command line");
       ech_config_len = strlen(data->set.str[STRING_ECH_CONFIG]);
       if(SSL_ech_set1_echconfig(backend->handle,
                                 ech_config, ech_config_len) != 1) {
@@ -3869,6 +3868,7 @@ static CURLcode ossl_connect_step1(struct Curl_cfilter *cf,
       else
         trying_ech_now = 1;
 # endif
+      infof(data, "ECH: ECHConfig from command line");
     }
     else {
       struct Curl_dns_entry *dns = NULL;
@@ -3997,14 +3997,16 @@ static void ossl_trace_ech_retry_configs(struct Curl_easy *data,
   CURLcode result = CURLE_OK;
   size_t rcl = 0;
   int rv = 1;
-  char *inner = NULL;
 # ifndef OPENSSL_IS_BORINGSSL
+  char *inner = NULL;
   unsigned char *rcs = NULL;
   char *outer = NULL;
 # else
+  const char *inner = NULL;
   const uint8_t *rcs = NULL;
   const char *outer = NULL;
   size_t out_name_len = 0;
+  int servername_type = 0;
 # endif
 
   /* nothing to trace if not doing ECH */
@@ -4013,7 +4015,6 @@ static void ossl_trace_ech_retry_configs(struct Curl_easy *data,
 # ifndef OPENSSL_IS_BORINGSSL
   rv = SSL_ech_get_retry_config(backend->handle, &rcs, &rcl);
 # else
-  SSL_get0_ech_name_override(backend->handle, &outer, &out_name_len);
   SSL_get0_ech_retry_configs(backend->handle, &rcs, &rcl);
   rv = (int)rcl;
 # endif
@@ -4034,6 +4035,9 @@ static void ossl_trace_ech_retry_configs(struct Curl_easy *data,
           inner ? inner : "NULL", outer ? outer : "NULL", reason, rv);
 #else
     rv = SSL_ech_accepted(backend->handle);
+    servername_type = SSL_get_servername_type(backend->handle);
+    inner = SSL_get_servername(backend->handle, servername_type);
+    SSL_get0_ech_name_override(backend->handle, &outer, &out_name_len);
     /* TODO: get the inner from boring */
     infof(data, "ECH: retry_configs for %s from %s, %d %d",
           inner ? inner : "NULL", outer ? outer : "NULL", reason, rv);
