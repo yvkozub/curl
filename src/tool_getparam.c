@@ -123,9 +123,7 @@ typedef enum {
   C_DOH_INSECURE,
   C_DOH_URL,
   C_DUMP_HEADER,
-#ifdef USE_ECH
   C_ECH,
-#endif
   C_EGD_FILE,
   C_ENGINE,
   C_EPRT,
@@ -407,9 +405,7 @@ static const struct LongShort aliases[]= {
   {"doh-insecure",               ARG_BOOL, ' ', C_DOH_INSECURE},
   {"doh-url"        ,            ARG_STRG, ' ', C_DOH_URL},
   {"dump-header",                ARG_FILE, 'D', C_DUMP_HEADER},
-#ifdef USE_ECH
   {"ech",                        ARG_STRG, ' ', C_ECH},
-#endif
   {"egd-file",                   ARG_STRG, ' ', C_EGD_FILE},
   {"engine",                     ARG_STRG, ' ', C_ENGINE},
   {"eprt",                       ARG_BOOL, ' ', C_EPRT},
@@ -2083,7 +2079,11 @@ ParameterError getparameter(const char *flag, /* f or -long-flag */
         err = PARAM_ENGINES_REQUESTED;
       }
       break;
-#ifdef USE_ECH
+#ifndef USE_ECH
+    case C_ECH: /* --ech, not implemented by default */
+      err = PARAM_LIBCURL_DOESNT_SUPPORT;
+      break;
+#else
     case C_ECH: /* --ech */
       if(strlen(nextarg) > 4 && strncasecompare("pn:", nextarg, 3)) {
         /* a public_name */
