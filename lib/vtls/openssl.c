@@ -4025,7 +4025,6 @@ static void ossl_trace_ech_retry_configs(struct Curl_easy *data,
 # else
   SSL_get0_ech_name_override(backend->handle, &outer, &out_name_len);
   SSL_get0_ech_retry_configs(backend->handle, &rcs, &rcl);
-  inner = connssl->hostname;
   rv = (int)rcl;
 # endif
 
@@ -4045,6 +4044,7 @@ static void ossl_trace_ech_retry_configs(struct Curl_easy *data,
           inner ? inner : "NULL", outer ? outer : "NULL", reason, rv);
 #else
     rv = SSL_ech_accepted(backend->handle);
+    /* TODO: get the inner from boring */
     infof(data, "ECH: retry_configs for %s from %s, %d %d",
           inner ? inner : "NULL", outer ? outer : "NULL", reason, rv);
 #endif
