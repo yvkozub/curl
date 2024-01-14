@@ -4527,8 +4527,6 @@ if test "x$want_httpsrr" != "xno"; then
   AC_MSG_RESULT([HTTPSRR support is available])
   AC_DEFINE(USE_HTTPSRR, 1, [enable HTTPS RR support])
   experimental="$experimental HTTPSRR"
-else
-  AC_DEFINE(USE_HTTPSRR, 0, [HTTPS RR support off])
 fi
 
 dnl *************************************************************
