@@ -325,15 +325,15 @@ allgood="yes"
 # basic ECH good/bad
 for targ in "${!ech_targets[@]}"
 do
-    if [[ "$using_wolf" == "yes" && "$targ" == "draft-13.esni.defo.ie:8414" ]]
+    if [[ "$using_wolf" == "yes" ]] 
     then
-        echo "Skipping $targ 'till wolf does HRR+ECH"
-        continue
-    fi
-    if [[ "$using_wolf" == "yes" && "$targ" == "tls-ech.dev" ]]
-    then
-        echo "Skipping $targ 'till wolf does HRR+ECH"
-        continue
+        case $targ in
+            "draft-13.esni.defo.ie:8414" | "tls-ech.dev" | \
+            "crypto.cloudflare.com" | "epochbelt.com")
+                echo "Skipping $targ 'cause wolf"; continue;;
+            *)
+                ;;
+        esac
     fi
     host=$(hostport2host $targ)
     port=$(hostport2port $targ)

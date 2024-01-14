@@ -349,7 +349,7 @@ Let's use that to build curl...
     git clone https://github.com/sftcd/curl
     cd curl
     git checkout ECH-experimental
-    autoregen -fi
+    autoreconf -fi
     ./configure --with-wolfssl=$HOME/code/wolfssl/inst --enable-ech --enable-httpsrr
     make
 ```
@@ -430,7 +430,7 @@ Then:
     git clone https://github.com/sftcd/curl
     cd curl
     git checkout ECH-experimental
-    automake -fi
+    autoreconf -fi
     ./configure --with-ssl=$HOME/code/boringssl/inst --enable-ech --enable-httpsrr
     ...lots of output...
     WARNING: ech ECH HTTPSRR enabled but marked EXPERIMENTAL. Use with caution!
