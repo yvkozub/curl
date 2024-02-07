@@ -27,7 +27,7 @@ Do not attempt ECH
 
 ## "grease"
 
-Send a GREASE'd ECH extension
+Send a GREASE ECH extension
 
 ## "true"
 

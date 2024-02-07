@@ -26,19 +26,20 @@ Pass a string that specifies configuration details for ECH.
 In all cases, if ECH is attempted, it may fail for various reasons.
 The keywords supported are:
 
-- false
+## false
 Turns off ECH.
-- grease
-Instructs client to emit a GREASE'd ECH extension.
-- true
+## grease
+Instructs client to emit a GREASE ECH extension.
+(The connection will fail if ECH is attempted but fails.)
+## true
 Instructs client to attempt ECH, if possible, but to not fail if attempting ECH is not possible.
-- hard
+## hard
 Instructs client to attempt ECH and fail if if attempting ECH is not possible.
-- ecl:<base64-value>
+## ecl:<base64-value>
 If the string starts with "ecl:" then the remainder of the string should be a base64-encoded
 ECHConfigList that is used for ECH rather than attempting to download such a value from
 the DNS.
-- pn:<name>
+## pn:<name>
 If the string starts with "pn:" then the remainder of the string should be a DNS/hostname
 that is used to over-ride the public_name field of the ECHConfigList that will be used
 for ECH.
