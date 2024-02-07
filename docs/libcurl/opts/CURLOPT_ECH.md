@@ -39,7 +39,7 @@ If the string starts with "ecl:" then the remainder of the string should be a ba
 ECHConfigList that is used for ECH rather than attempting to download such a value from
 the DNS.
 - pn:<name>
-If the string starts with "pn:" then the remainder of the string should be a DNS/host name
+If the string starts with "pn:" then the remainder of the string should be a DNS/hostname
 that is used to over-ride the public_name field of the ECHConfigList that will be used
 for ECH.
 
