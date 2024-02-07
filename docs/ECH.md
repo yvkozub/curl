@@ -108,7 +108,7 @@ The above works for these test sites:
     https://tls-ech.dev
 ```
 
-So we seem to have the basic thing functioning now. That list has 4 different
+We seem to have the basic thing functioning now. That list has 4 different
 server technologies, implemented by 3 different parties, and includes a case
 (the port 8414 server) where HelloRetryRequest (HRR) is forced.
 
@@ -222,7 +222,7 @@ With all that setup as above the command line gets simpler:
     ...
 ```
 
-The ``--ech true`` option is opportunistic, so will try to do ECH but won't fail if
+The ``--ech true`` option is opportunistic, so will try to do ECH but will not fail if
 the client for example cannot find any ECHConfig values. The ``--ech hard``
 option hard-fails if there is no ECHConfig found in DNS, so for now, that is not
 a good option to set as a default.
@@ -291,7 +291,7 @@ versus A/AAAA values might be a good basis for that. Last I checked though,
 browsers supporting ECH did not handle multiple HTTPS RRs well, though that
 needs re-checking as it has been a while.
 
-- It's unclear how one should handle any IP address hints found in an HTTPS RR.
+- It is unclear how one should handle any IP address hints found in an HTTPS RR.
   It may be that a bit of consideration of how "multi-CDN" deployments might
 emerge would provide good answers there, but for now, it is not clear how best
 curl might handle those values when present in the DNS.
