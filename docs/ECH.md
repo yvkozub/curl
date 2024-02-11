@@ -185,16 +185,18 @@ so one can set the DoH URL and enable ECH that way:
 ```bash
     cat ~/.curlrc
     doh-url=https://one.one.one.one/dns-query
-    silent=TRUE
+    silent
     ech=TRUE
 ```
 
 Note that when you use the system's curl command (rather than our ECH-enabled
 build), it is liable to warn that ``ech`` is an unknown option. If that is an
 issue (e.g. if some script re-directs stdout and stderr somewhere) then adding
-the ``silent=TRUE`` line above seems to be a good enough fix. (Though of
+the ``silent`` line above seems to be a good enough fix. (Though of
 course, yet another script could depend on non-silent behavior, so you will have
-to figure out what you prefer yourself.)
+to figure out what you prefer yourself.) That seems to have changed with the
+latest build, previously ``silent=TRUE`` was what I used in ``~/.curlrc`` but
+now that seems to cause a problem, so that the following line(s) are ignored.
 
 If you want to always use our OpenSSL build you can set ``LD_LIBRARY_PATH``
 in the environment:

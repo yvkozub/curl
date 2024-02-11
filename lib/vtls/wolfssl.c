@@ -76,6 +76,10 @@
 
 #ifdef USE_ECH
 # include "curl_base64.h"
+# define ECH_ENABLED(__data__) \
+    (__data__->set.tls_ech && \
+     !(__data__->set.tls_ech & (1 << CURLECH_DISABLE))\
+    )
 #endif /* USE_ECH */
 
 /* KEEP_PEER_CERT is a product of the presence of build time symbol
@@ -727,7 +731,7 @@ wolfssl_connect_step1(struct Curl_cfilter *cf, struct Curl_easy *data)
   }
 
 #ifdef USE_ECH
-  if(data->set.tls_ech != CURLECH_DISABLE) {
+  if(ECH_ENABLED(data)) {
     int trying_ech_now = 0;
 
     if(data->set.str[STRING_ECH_PUBLIC]) {
