@@ -53,7 +53,6 @@
 #define PORT_GOPHER 70
 #define PORT_MQTT 1883
 
-
 struct curl_trc_featt;
 
 #ifdef USE_ECH
