@@ -1422,7 +1422,7 @@ if test X"$OPT_BROTLI" != Xno; then
 
   dnl if given with a prefix, we set -L and -I based on that
   if test -n "$PREFIX_BROTLI"; then
-    LIB_BROTLI="-lbrotlidec"
+    LIB_BROTLI="-lbrotlidec -lbrotlienc"
     LD_BROTLI=-L${PREFIX_BROTLI}/lib$libsuff
     CPP_BROTLI=-I${PREFIX_BROTLI}/include
     DIR_BROTLI=${PREFIX_BROTLI}/lib$libsuff
@@ -1433,9 +1433,10 @@ if test X"$OPT_BROTLI" != Xno; then
   LIBS="$LIB_BROTLI $LIBS"
 
   AC_CHECK_LIB(brotlidec, BrotliDecoderDecompress)
+  AC_CHECK_LIB(brotlienc, BrotliEncoderCompress)
 
-  AC_CHECK_HEADERS(brotli/decode.h,
-    curl_brotli_msg="enabled (libbrotlidec)"
+  AC_CHECK_HEADERS(brotli/decode.h brotli/encode.h,
+    curl_brotli_msg="enabled (libbrotlidec, libbrotlienc)"
     HAVE_BROTLI=1
     AC_DEFINE(HAVE_BROTLI, 1, [if BROTLI is in use])
     AC_SUBST(HAVE_BROTLI, [1])

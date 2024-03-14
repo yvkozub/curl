@@ -117,6 +117,14 @@
 #include <openssl/ui.h>
 #endif
 
+
+#ifdef HAVE_BROTLI
+#include <brotli/decode.h>
+#include <brotli/encode.h>
+#endif
+
+#include <openssl/pool.h>
+
 #if OPENSSL_VERSION_NUMBER >= 0x00909000L
 #define SSL_METHOD_QUAL const
 #else
@@ -245,16 +253,22 @@
 #endif
 #endif
 
-#if (OPENSSL_VERSION_NUMBER >= 0x10100000L)
-/* up2date versions of OpenSSL maintain reasonably secure defaults without
- * breaking compatibility, so it is better not to override the defaults in curl
- */
-#define DEFAULT_CIPHER_SELECTION NULL
-#else
-/* ... but it is not the case with old versions of OpenSSL */
 #define DEFAULT_CIPHER_SELECTION \
-  "ALL:!EXPORT:!EXPORT40:!EXPORT56:!aNULL:!LOW:!RC4:@STRENGTH"
-#endif
+  ("TLS_AES_128_GCM_SHA256:"\
+  "TLS_AES_256_GCM_SHA384:"\
+  "TLS_CHACHA20_POLY1305_SHA256:"\
+  "TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:"\
+  "TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256:"\
+  "TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384:"\
+  "TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384:"\
+  "TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256:"\
+  "TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256:"\
+  "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA:"\
+  "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA:"\
+  "TLS_RSA_WITH_AES_128_GCM_SHA256:"\
+  "TLS_RSA_WITH_AES_256_GCM_SHA384:"\
+  "TLS_RSA_WITH_AES_128_CBC_SHA:T"\
+  "LS_RSA_WITH_AES_256_CBC_SHA")
 
 #ifdef HAVE_OPENSSL_SRP
 /* the function exists */
@@ -356,6 +370,65 @@ do {                              \
     pubkey_show(data, mem, _num, #_type, #_name, _type->_name); \
   } \
 } while(0)
+#endif
+
+#if defined(HAVE_BROTLI)
+static uint16_t CERTIFICATE_COMPRESSION_ALGO_BROTLI = 2;
+
+static int cert_compress(SSL *ssl,
+                         CBB *out,
+                         const uint8_t *in,
+                         size_t in_len) {
+  uint8_t *dest;
+
+  auto compressed_size = BrotliEncoderMaxCompressedSize(in_len);
+  if(compressed_size == 0) {
+    return 0;
+  }
+
+  if(!CBB_reserve(out, &dest, compressed_size)) {
+    return 0;
+  }
+
+  if(BrotliEncoderCompress(BROTLI_MAX_QUALITY, BROTLI_DEFAULT_WINDOW,
+                            BROTLI_MODE_GENERIC, in_len, in, &compressed_size,
+                            dest) != BROTLI_TRUE) {
+    return 0;
+  }
+
+  if(!CBB_did_write(out, compressed_size)) {
+    return 0;
+  }
+
+  return 1;
+}
+
+static int cert_decompress(SSL *ssl,
+                           CRYPTO_BUFFER **out,
+                           size_t uncompressed_len,
+                           const uint8_t *in,
+                           size_t in_len) {
+  uint8_t *dest;
+  auto buf = CRYPTO_BUFFER_alloc(&dest, uncompressed_len);
+  auto len = uncompressed_len;
+
+  if(BrotliDecoderDecompress(in_len, in, &len, dest) !=
+      BROTLI_DECODER_RESULT_SUCCESS) {
+    CRYPTO_BUFFER_free(buf);
+
+    return 0;
+  }
+
+  if(uncompressed_len != len) {
+    CRYPTO_BUFFER_free(buf);
+
+    return 0;
+  }
+
+  *out = buf;
+
+  return 1;
+}
 #endif
 
 static int asn1_object_dump(ASN1_OBJECT *a, char *buf, size_t len)
@@ -3530,6 +3603,24 @@ static CURLcode ossl_connect_step1(struct Curl_cfilter *cf,
     ossl_close(cf, data);
   }
   backend->ctx = SSL_CTX_new(req_method);
+  SSL_CTX_enable_ocsp_stapling(backend->ctx);
+  SSL_CTX_set_grease_enabled(backend->ctx, 1);
+  SSL_CTX_enable_signed_cert_timestamps(backend->ctx);
+  SSL_CTX_set1_sigalgs_list(backend->ctx,
+                            "ecdsa_secp256r1_sha256:"
+                            "rsa_pss_rsae_sha256:"
+                            "rsa_pkcs1_sha256:"
+                            "ecdsa_secp384r1_sha384:"
+                            "rsa_pss_rsae_sha384:"
+                            "rsa_pkcs1_sha384:"
+                            "rsa_pss_rsae_sha512:"
+                            "rsa_pkcs1_sha512");
+
+#ifdef HAVE_BROTLI
+  SSL_CTX_add_cert_compression_alg(
+          backend->ctx, CERTIFICATE_COMPRESSION_ALGO_BROTLI,
+          cert_compress, cert_decompress);
+#endif
 
   if(!backend->ctx) {
     failf(data, "SSL: couldn't create a context: %s",
@@ -3587,9 +3678,10 @@ static CURLcode ossl_connect_step1(struct Curl_cfilter *cf,
 
   ctx_options = SSL_OP_ALL;
 
-#ifdef SSL_OP_NO_TICKET
-  ctx_options |= SSL_OP_NO_TICKET;
-#endif
+/* #ifdef SSL_OP_NO_TICKET
+   ctx_options |= SSL_OP_NO_TICKET;
+ #endif
+ */
 
 #ifdef SSL_OP_NO_COMPRESSION
   ctx_options |= SSL_OP_NO_COMPRESSION;
@@ -3667,29 +3759,6 @@ static CURLcode ossl_connect_step1(struct Curl_cfilter *cf,
       return result;
   }
 
-  ciphers = conn_config->cipher_list;
-  if(!ciphers)
-    ciphers = (char *)DEFAULT_CIPHER_SELECTION;
-  if(ciphers) {
-    if(!SSL_CTX_set_cipher_list(backend->ctx, ciphers)) {
-      failf(data, "failed setting cipher list: %s", ciphers);
-      return CURLE_SSL_CIPHER;
-    }
-    infof(data, "Cipher selection: %s", ciphers);
-  }
-
-#ifdef HAVE_SSL_CTX_SET_CIPHERSUITES
-  {
-    char *ciphers13 = conn_config->cipher_list13;
-    if(ciphers13) {
-      if(!SSL_CTX_set_ciphersuites(backend->ctx, ciphers13)) {
-        failf(data, "failed setting TLS 1.3 cipher suite: %s", ciphers13);
-        return CURLE_SSL_CIPHER;
-      }
-      infof(data, "TLS 1.3 cipher selection: %s", ciphers13);
-    }
-  }
-#endif
 
 #ifdef HAVE_SSL_CTX_SET_POST_HANDSHAKE_AUTH
   /* OpenSSL 1.1.1 requires clients to opt-in for PHA */
@@ -3785,6 +3854,32 @@ static CURLcode ossl_connect_step1(struct Curl_cfilter *cf,
     failf(data, "SSL: couldn't create a context (handle)");
     return CURLE_OUT_OF_MEMORY;
   }
+
+  SSL_add_application_settings(backend->handle, "h2", 2, NULL, 0);
+
+  ciphers = conn_config->cipher_list;
+  if(!ciphers)
+    ciphers = (char *)DEFAULT_CIPHER_SELECTION;
+  if(ciphers) {
+    if(!SSL_CTX_set_cipher_list(backend->ctx, ciphers)) {
+      failf(data, "failed setting cipher list: %s", ciphers);
+      return CURLE_SSL_CIPHER;
+    }
+    infof(data, "Cipher selection: %s", ciphers);
+  }
+
+#ifdef HAVE_SSL_CTX_SET_CIPHERSUITES
+  {
+    char *ciphers13 = conn_config->cipher_list13;
+    if(ciphers13) {
+      if(!SSL_CTX_set_ciphersuites(backend->ctx, ciphers13)) {
+        failf(data, "failed setting TLS 1.3 cipher suite: %s", ciphers13);
+        return CURLE_SSL_CIPHER;
+      }
+      infof(data, "TLS 1.3 cipher selection: %s", ciphers13);
+    }
+  }
+#endif
 
   SSL_set_app_data(backend->handle, cf);
 
