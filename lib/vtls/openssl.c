@@ -420,8 +420,8 @@ static int cert_decompress(SSL *ssl,
                            const uint8_t *in,
                            size_t in_len) {
   uint8_t *dest;
-  auto buf = CRYPTO_BUFFER_alloc(&dest, uncompressed_len);
-  auto len = uncompressed_len;
+  CRYPTO_BUFFER* buf = CRYPTO_BUFFER_alloc(&dest, uncompressed_len);
+  size_t len = uncompressed_len;
 
   if(BrotliDecoderDecompress(in_len, in, &len, dest) !=
       BROTLI_DECODER_RESULT_SUCCESS) {

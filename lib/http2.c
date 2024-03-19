@@ -69,7 +69,8 @@
  * use 16K as chunk size, as that fits H2 DATA frames well */
 #define H2_CHUNK_SIZE           (16 * 1024)
 /* this is how much we want "in flight" for a stream */
-#define H2_STREAM_WINDOW_SIZE   (10 * 1024 * 1024)
+/* #define H2_STREAM_WINDOW_SIZE   (10 * 1024 * 1024) */
+#define H2_STREAM_WINDOW_SIZE   6291456
 /* on receiving from TLS, we prep for holding a full stream window */
 #define H2_NW_RECV_CHUNKS       (H2_STREAM_WINDOW_SIZE / H2_CHUNK_SIZE)
 /* on send into TLS, we just want to accumulate small frames */
@@ -92,19 +93,25 @@
 #define H2_SETTINGS_IV_LEN  3
 #define H2_BINSETTINGS_LEN 80
 
+#define H2_HEADER_TABLE_SIZE 65536
+#define H2_MAX_HEADER_LIST_SIZE 262144
+
 static int populate_settings(nghttp2_settings_entry *iv,
                              struct Curl_easy *data)
 {
-  iv[0].settings_id = NGHTTP2_SETTINGS_MAX_CONCURRENT_STREAMS;
-  iv[0].value = Curl_multi_max_concurrent_streams(data->multi);
+  iv[0].settings_id = NGHTTP2_SETTINGS_HEADER_TABLE_SIZE;
+  iv[0].value = H2_HEADER_TABLE_SIZE;
 
-  iv[1].settings_id = NGHTTP2_SETTINGS_INITIAL_WINDOW_SIZE;
-  iv[1].value = H2_STREAM_WINDOW_SIZE;
+  iv[1].settings_id = NGHTTP2_SETTINGS_ENABLE_PUSH;
+  iv[1].value = data->multi->push_cb != NULL;
 
-  iv[2].settings_id = NGHTTP2_SETTINGS_ENABLE_PUSH;
-  iv[2].value = data->multi->push_cb != NULL;
+  iv[2].settings_id = NGHTTP2_SETTINGS_INITIAL_WINDOW_SIZE;
+  iv[2].value = H2_STREAM_WINDOW_SIZE;
 
-  return 3;
+  iv[3].settings_id = NGHTTP2_SETTINGS_MAX_HEADER_LIST_SIZE;
+  iv[3].value = H2_MAX_HEADER_LIST_SIZE;
+
+  return 4;
 }
 
 static ssize_t populate_binsettings(uint8_t *binsettings,
